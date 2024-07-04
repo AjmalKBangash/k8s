@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-pv-depl
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx-pvcon-label
+  template:
+    metadata:
+      labels:
+        app: nginx-pvcon-label
+    spec:
+      containers:
+        - name: nginx-pvcon
+          image: nginx
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: "/usr/share/nginx/html"
+              name: html-volume
+            # - mountPath: "/usr/share/nginx/html/ddd"
+            # name: html02-volume
+            - mountPath: "/etc/nginx/conf.d"
+              name: conf-volume
+      volumes:
+        - name: html-volume
+          persistentVolumeClaim:
+            claimName: nginx-html-pvc
+        # - name: html02-volume
+        #   persistentVolumeClaim:
+        #     claimName: nginx-html02-pvc
+        - name: conf-volume
+          persistentVolumeClaim:
+            claimName: nginx-conf-pvc

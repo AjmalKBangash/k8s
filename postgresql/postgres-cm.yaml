@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgre-cm-d
+  # labels:
+  # app: postgres
+data:
+  # POSTGRES_DB: ps_db
+  # POSTGRES_USER: ps_user
+  # POSTGRES_PASSWORD: passwd@302
+  POSTGRES_PASSWORD: passwd-ajay-302
+  # PGDATA: /var/lib/postgresql/data/pgdata

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nginx-pv
+  labels:
+    type: ngdp-pv-label02
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/Portfolio-Frontend/build"
+  # claimRef:   it is very important because through labels connections pv is not connecting to pvc while through  claimRef: it is connecting correctly
+  claimRef:
+    namespace: default
+    name: nginx-pvc

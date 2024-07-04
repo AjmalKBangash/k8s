@@ -1,0 +1,39 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: ngdp-ing
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+# spec:
+#   rules:
+#     - host: nginx.ajmal.com
+#       http:
+#         paths:
+#           - path: /app
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: ngdp-service
+#                 port:
+#                   number: 80
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ngdp-ing
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - host: nginx.ajmal.com
+      http:
+        paths:
+          # - path: /app(/|$)(.*)
+          - path: /app/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: ngdp-service
+                port:
+                  number: 80

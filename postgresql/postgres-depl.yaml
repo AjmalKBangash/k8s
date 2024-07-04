@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgre-depl
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgre-pods-label
+  template:
+    metadata:
+      labels:
+        app: postgre-pods-label
+    spec:
+      containers:
+        - name: postgre-container-name
+          # image: ajmalkhanbangash/afd-app:0.1
+          image: postgres
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgre-cm-d
+          volumeMounts:
+            # - mountPath: "/var/lib/postgresql/15/main"
+            - mountPath: "/var/lib/postgresql/data"
+              name: postgres-volume
+      volumes:
+        - name: postgres-volume
+          persistentVolumeClaim:
+            claimName: postgre-pvc-d
