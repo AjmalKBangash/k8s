@@ -192,3 +192,18 @@ kubectl exec curl-deployment-<pod_id> -- curl https://my-nginx --cacert /etc/ngi
 ```
 
 This setup ensures that communication between your Nginx server and clients is secure using HTTPS, with certificates stored and managed securely within Kubernetes.
+
+
+
+
+
+//////////////////////////
+this is link of the explanation (((((((https://github.com/nginxinc/kubernetes-ingress/tree/main/examples/ingress-resources/complete-example)))))))
+2nd option using --insecure option in curl command 
+4. Test the Application
+
+To access the application, curl the coffee and the tea services. We'll use curl's --insecure option to turn off certificate verification of our self-signed certificate and the --resolve option to set the Host header of a request with cafe.example.com
+
+To get coffee:
+
+curl --resolve cafe.example.com:$IC_HTTPS_PORT:$IC_IP https://cafe.example.com:$IC_HTTPS_PORT/coffee --insecure
