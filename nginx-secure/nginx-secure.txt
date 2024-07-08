@@ -142,7 +142,7 @@ You can access the Nginx server using the `curl` command.
 #### From a Node:
 Get the pod IP:
 ```sh
-kubectl get pods -l run=my-nginx -o custom-columns=POD_IP:.status.podIPs
+kubectl get pods -l run=my-nginx -o custom-columns=POD_IP:.status.podIP
 ```
 Use `curl` to access the service:
 ```sh

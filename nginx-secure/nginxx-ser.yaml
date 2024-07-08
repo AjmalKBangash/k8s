@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: nginxx-service
 spec:
-  # type: NodePort
+  type: NodePort
   selector:
     app: nginxx-pods-label
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 80
-      # nodePort: 32000
+      port: 443
+      targetPort: 443
+      nodePort: 31345
