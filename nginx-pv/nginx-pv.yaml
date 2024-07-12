@@ -12,7 +12,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: "/mnt/data/Portfolio-Frontend/build"
-    path: "/mnt/data/configuration"
+    # path: "/mnt/data/configuration"
   # claimRef:   it is very important because through labels connections pv is not connecting to pvc while through  claimRef: it is connecting correctly
   claimRef:
     namespace: default

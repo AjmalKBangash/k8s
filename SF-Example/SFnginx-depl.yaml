@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1
+  template:
+    metadata:
+      labels:
+        app: app1
+    spec:
+      containers:
+        - name: app1
+          image: nginx:alpine # Replace with your desired image
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: "/usr/share/nginx/html"
+              name: sf-volume
+            # - mountPath: "/usr/share/nginx/html/ddd"
+            # name: html02-volume
+            - mountPath: "/etc/nginx/conf.d"
+              name: sf-conf-volume
+      volumes:
+        - name: sf-volume
+          persistentVolumeClaim:
+            claimName: sf-pvc
+        # - name: html02-volume
+        #   persistentVolumeClaim:
+        #     claimName: nginx-html02-pvc
+        - name: sf-conf-volume
+          persistentVolumeClaim:
+            claimName: sf-conf-pvc

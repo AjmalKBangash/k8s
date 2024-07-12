@@ -1,0 +1,53 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: fanout-ingress
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+# spec:
+#   rules:
+#   - http:
+#       paths:
+#       - path: /app1
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: app1-service
+#             port:
+#               number: 80
+#       - path: /app2
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: app2-service
+#             port:
+#               number: 80
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fanout-ingress
+  annotations:
+    nginx.org/rewrites: "serviceName=app1-service rewrite=/app;serviceName=app2-service rewrite=/"
+spec:
+  rules:
+    - host: ngi.ajmal.com
+      http:
+        paths:
+          - path: /
+            # - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app1-service
+                port:
+                  number: 80
+    - host: ngi02.ajmal.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app2-service
+                port:
+                  number: 80
