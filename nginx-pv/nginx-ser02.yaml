@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: nginx-service02
 spec:
-  # type: NodePort
+  type: NodePort
   # type: LoadBalancer
   selector:
     app: nginx-pvcon-label02
@@ -11,4 +11,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-      # nodePort: 31231
+      nodePort: 31231
