@@ -14,9 +14,10 @@ spec:
     spec:
       containers:
         - name: tr-system
-          image: ajmalkhanbangash/tr_system:0.0
+          # image: ajmalkhanbangash/tr_system:0.0
+          image: nginx
           ports:
-            - containerPort: 3000
+            - containerPort: 80
       #     volumeMounts:
       #       - mountPath: "/usr/share/nginx/html"
       #         name: html-volume
