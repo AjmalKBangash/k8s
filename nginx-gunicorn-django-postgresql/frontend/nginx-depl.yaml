@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ngdp-depl
+  name: frontend-depl
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: ngdp-pods-label
+      app: frontend-pods-label
   template:
     metadata:
       labels:
-        app: ngdp-pods-label
+        app: frontend-pods-label
     spec:
       containers:
-        - name: nginx-ngdp
+        - name: nginx-frontend
           # image: ajmalkhanbangash/afd-app:0.1
           image: nginx
           ports:
             - containerPort: 80
           volumeMounts:
             - mountPath: "/usr/share/nginx/html"
-              name: ngdp-pv-volume
+              name: frontend-pv-volume
             - mountPath: "/etc/nginx/conf.d"
-              name: ngdp-pv-volume02
+              name: frontend-pv-volume02
       volumes:
-        - name: ngdp-pv-volume
+        - name: frontend-pv-volume
           persistentVolumeClaim:
             claimName: nginx-pvc
-        - name: ngdp-pv-volume02
+        - name: frontend-pv-volume02
           persistentVolumeClaim:
-            claimName: ngdp-pvc
+            claimName: frontend-pvc
