@@ -1,0 +1,22 @@
+Ingress:
+In the in gresss resource there will be only one service exposed which will be portfolio_frontend and the other
+services like databases and python(django) backend should be kept inside k8s cluster without 
+exposing it to the outside world because of security issues and we do not want it to the outside world 
+but the question is that,
+What if we need some apis from this backend in our other projects then how should only these apis 
+or this backend should be exposed to the outside world ?
+
+Deployments:
+react_frontend --
+postgresql --
+nginx with django (gunicorn or wsg) --
+celery -- ? Leave it as of now
+redis ? -- ? Leave it as of now
+
+
+1--FRONTEND--) The best approach is to decouple services whoch k8s is all bout (microservices) it means that react with nginx:lightweight 
+servoice with each.
+2--BACKEND--) The second service should for wsgi(gunicorn or wsgi) with django and nginx separate ly for separation of concerns in a 
+single k8s service.
+3--POSTGRESQL) The third service should be about postgresql database wich should also be in a separate service
+why because if react srvice or django service failed then still database service will worrk correctly.

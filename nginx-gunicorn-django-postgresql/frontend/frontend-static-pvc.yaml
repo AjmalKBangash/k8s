@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nginx-pvc
+  name: frontend-static-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  volumeName: nginx-pv
+  volumeName: frontend-static-pv
   # selector:
   #   matchLabels:
-  #     type: ngdp-pv-label
+  #     type: frontend-static-pv-label
