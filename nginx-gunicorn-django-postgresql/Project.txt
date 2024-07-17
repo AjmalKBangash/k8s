@@ -20,3 +20,13 @@ servoice with each.
 single k8s service.
 3--POSTGRESQL) The third service should be about postgresql database wich should also be in a separate service
 why because if react srvice or django service failed then still database service will worrk correctly.
+
+
+
+Deployment ??
+1--- Postgresql in k8s and test it from local connection of your django app ?
+2--- Gunicorn and django in nginx web server ?
+3--- React app with nginx:light(alpine) 
+
+
+(pg_hba.conf    init-db.sh     pgdata(persistent data storage tables, rows etc))

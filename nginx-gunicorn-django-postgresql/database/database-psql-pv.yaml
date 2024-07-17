@@ -1,0 +1,28 @@
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: db-psql-pv
+# spec:
+#   capacity:
+#     storage: 2Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   hostPath:
+#     path: /mnt/data/postgres
+#   claimRef:
+#     namespace: django-react
+#     name: db-psql-pvc
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgre-pv
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/postgre
+  claimRef:
+    namespace: django-react
+    name: postgre-pvc
