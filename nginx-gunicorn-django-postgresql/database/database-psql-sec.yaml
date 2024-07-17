@@ -1,0 +1,21 @@
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: db-psql-sec
+# type: Opaque
+# data:
+#   db-psql-database: aGFtYWRfZGIK # Base64 encoded 'hamad_db'
+#   db-psql-user: aGFtYWQK # Base64 encoded 'hamad'
+#   db-psql-password: cGFzc3dkLWhhbWFkLTMwMgo= # Base64 encoded 'passwd-hamad-302'
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  labels:
+    app: postgres
+type: Opaque
+data:
+  postgres-user: aGFtYWQ= # base64 encoded 'hamad'
+  postgres-password: cGFzc3dkLWhhbWFkLTMwMg== # base64 encoded 'passwd-hamad-302'
+  postgres-db: aGFtYWRfZGI= # base64 encoded 'hamad_db'

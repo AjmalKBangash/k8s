@@ -1,0 +1,22 @@
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: db-psql-cm-initdb
+# data:
+#   init-user-db.sql: |
+#     CREATE USER postgres WITH PASSWORD $POSTGRES_PASSWORD;
+#     CREATE DATABASE $POSTGRES_DB;
+#     GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO postgres;
+#     ALTER DATABASE $POSTGRES_DB OWNER TO postgres;
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  labels:
+    app: postgres
+data:
+  postgres.conf: |
+    listen_addresses = '*'
+  pg_hba.conf: |
+    host all all 0.0.0.0/0 md5

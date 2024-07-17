@@ -1,0 +1,136 @@
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: db-psql-sft
+# spec:
+#   serviceName: "db-psql-svc"
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: db-psql-sft-label
+#   minReadySeconds: 10
+#   template:
+#     metadata:
+#       labels:
+#         app: db-psql-sft-label
+#     spec:
+#       terminationGracePeriodSeconds: 10
+#       containers:
+#         - name: postgressql
+#           image: postgres
+#           ports:
+#             - containerPort: 5432
+#               name: db-psql-con
+#           volumeMounts:
+#             - name: db-psql-pv-data-initdb
+#               mountPath: /docker-entrypoint-initdb.d
+#             - name: db-psql-pv-data
+#               mountPath: /var/lib/postgresql/data
+#           env:
+#             - name: POSTGRES_DB
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: db-psql-sec
+#                   key: db-psql-database
+#             - name: POSTGRES_USER
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: db-psql-sec
+#                   key: db-psql-user
+#             - name: POSTGRES_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: db-psql-sec
+#                   key: db-psql-password
+#       volumes:
+#         - name: db-psql-pv-data
+#           persistentVolumeClaim:
+#             claimName: db-psql-pvc
+#         - name: db-psql-pv-data-initdb
+#           configMap:
+#             name: db-psql-cm-initdb
+#         #   persistentVolumeClaim:
+#         #     claimName: db-psql-pvc
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: dynamic-pvcs
+#       spec:
+#         accessModes: ["ReadWriteOnce"]
+#         resources:
+#           requests:
+#             storage: 2Gi
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:latest
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-db
+          volumeMounts:
+            - name: postgres-persistent-storage
+              mountPath: /var/lib/postgresql/data
+              # subPath: postgres
+            - name: config-volume
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgres.conf
+              readOnly: true
+            - name: config-volume
+              mountPath: /etc/postgresql/pg_hba.conf
+              subPath: pg_hba.conf
+              readOnly: true
+            - name: initdb-volume
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: config-volume
+          configMap:
+            name: postgres-config
+        - name: initdb-volume
+          configMap:
+            name: postgres-initdb-config
+        - name: postgres-persistent-storage
+          persistentVolumeClaim:
+            claimName: db-psql-pvc
+
+  # volumeClaimTemplates:
+  #   - metadata:
+  #       name: postgres-persistent-storage
+  #       labels:
+  #         app: postgres
+  #     spec:
+  #       accessModes: ["ReadWriteOnce"]
+  #       resources:
+  #         requests:
+  #           storage: 1Gi

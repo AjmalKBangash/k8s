@@ -1,0 +1,29 @@
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: db-psql-svc
+# spec:
+#   type: NodePort
+#   # sessionAffinity: None
+#   selector:
+#     app: db-psql-sft-label
+#   ports:
+#     - protocol: TCP
+#       name: postgresql
+#       port: 5432
+#       nodePort: 32000
+#       targetPort: postgresql
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None
+  selector:
+    app: postgres
