@@ -1,14 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: frontend-static-pvc
+  name: bk-conf-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  volumeName: frontend-static-pv
-  # selector:
-  #   matchLabels:
-  #     type: frontend-static-pv-label
+  volumeName: bk-conf-pv

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bk-depl
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bk-pods-label
+  template:
+    metadata:
+      labels:
+        app: bk-pods-label
+    spec:
+      containers:
+        - name: bk
+          image: ajmalkhanbangash/port-backend:0.0.0
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DB_HOST
+              value: "localhost"
+              # valueFrom:
+              #   secretKeyRef:
+              #     name: postgres-secret
+              #     key: postgres-db
+            - name: DB_PORT
+              value: "5432"
+              # valueFrom:
+              #   secretKeyRef:
+              #     name: postgres-secret
+              #     key: postgres-db
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-django-secret
+                  key: secret-key
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-django-secret
+                  key: postgres-db
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-django-secret
+                  key: postgres-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-django-secret
+                  key: postgres-password
+          volumeMounts:
+            - mountPath: "/PortfolioBackend/settings.py"
+              name: bk-pv-volume
+            - mountPath: "/etc/nginx/gunicorn.conf.py"
+              name: bk-pv-volume02
+      volumes:
+        - name: bk-pv-volume
+          # persistentVolumeClaim:
+          # claimName: bk-pvc
+          configMap:
+            name: bk-settings-cm
+        - name: bk-pv-volume02
+          # persistentVolumeClaim:
+          # claimName: bk-pvc
+          configMap:
+            name: bk-gunicorn-cm
