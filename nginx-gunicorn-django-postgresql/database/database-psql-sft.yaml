@@ -68,7 +68,7 @@ metadata:
     app: postgres
 spec:
   serviceName: "postgres"
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: postgres
@@ -122,7 +122,7 @@ spec:
             name: postgres-initdb-config
         - name: postgres-persistent-storage
           persistentVolumeClaim:
-            claimName: db-psql-pvc
+            claimName: postgre-pvc
 
   # volumeClaimTemplates:
   #   - metadata:
