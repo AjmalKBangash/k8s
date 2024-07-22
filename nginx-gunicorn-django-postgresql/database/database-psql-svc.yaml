@@ -21,15 +21,17 @@ metadata:
   labels:
     app: postgres
 spec:
-  type: NodePort
+  # type: NodePort
   ports:
     - name: postgres
-      protocol: TCP
+      # protocol: TCP
       port: 5432
-      targetPort: 5432
-      nodePort: 32323
+      # targetPort: 5432
+      # nodePort: 32323
+  clusterIP: None
   selector:
     app: postgres
+# ///////////////////////////////////////
 # apiVersion: v1
 # kind: Service
 # metadata:

@@ -14,12 +14,12 @@ spec:
     spec:
       containers:
         - name: bk
-          image: ajmalkhanbangash/port-backend:0.0.0
+          image: ajmalkhanbangash/port-backend:0.0.1
           ports:
             - containerPort: 8000
           env:
             - name: DB_HOST
-              value: "localhost"
+              value: "postgres"
               # valueFrom:
               #   secretKeyRef:
               #     name: postgres-secret
@@ -51,18 +51,23 @@ spec:
                   name: postgres-django-secret
                   key: postgres-password
           volumeMounts:
-            - mountPath: "/PortfolioBackend/settings.py"
+            - mountPath: "/PortfolioBackend/PortfolioBackend/settings.py"
               name: bk-pv-volume
-            - mountPath: "/etc/nginx/gunicorn.conf.py"
+              subPath: settings.py
+            - mountPath: "/PortfolioBackend/gunicorn.conf.py"
               name: bk-pv-volume02
+              subPath: gunicorn.conf.py
+            - mountPath: /PortfolioBackend/staticdirectory/
+              name: shared-storage
+            - mountPath: /PortfolioBackend/Media/
+              name: shared-storage
       volumes:
         - name: bk-pv-volume
-          # persistentVolumeClaim:
-          # claimName: bk-pvc
           configMap:
             name: bk-settings-cm
         - name: bk-pv-volume02
-          # persistentVolumeClaim:
-          # claimName: bk-pvc
           configMap:
             name: bk-gunicorn-cm
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: bk-static-pvc

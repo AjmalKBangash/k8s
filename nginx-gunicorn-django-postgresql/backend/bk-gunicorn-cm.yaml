@@ -6,6 +6,7 @@ data:
   gunicorn.conf.py: |
     # gunicorn.conf.py
     # bind = '127.0.0.1:8000'
+    # Janan de
     bind = '0.0.0.0:8000'
     # The backlog setting in Gunicorn defines the maximum number of pending connections that the server will hold in the queue before it starts refusing new connections. This is particularly important when the server is handling a large number of simultaneous connection requests.
     # backlog: The maximum number of pending connections. Defaults to 2048.
