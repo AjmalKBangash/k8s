@@ -21,12 +21,11 @@ data:
     SECRET_KEY = os.getenv('SECRET_KEY', config('SECRET_KEY'))
 
     # SECURITY WARNING: don't run with debug turned on in production!
-    DEBUG = True
+    DEBUG = False
 
     # ALLOWED_HOSTS = ['ajmalkhan.online', 'www.ajmalkhan.online', 'localhost', '51.20.65.81','127.0.0.1']
-    ALLOWED_HOSTS = ['www.ajmal.com', '*', 'www.ajmal.com:31345', 'ajmal.com', '198.168.49.2', 'ng-service', 'fr-service', '10.99.35.173', '10.108.255.157']
-    USE_X_FORWARDED_HOST = True
-    # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') #This line configures Django to recognize a specific header indicating that the request is secure when the application is behind a proxy or load balancer
+    ALLOWED_HOSTS = ['www.ajmal.com']
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') #This line configures Django to recognize a specific header indicating that the request is secure when the application is behind a proxy or load balancer
 
 
     # Proper Django configuration involves setting the /
@@ -48,9 +47,9 @@ data:
         'django.contrib.staticfiles',
         
         # My Installed and Configured Apps 
-        'corsheaders',
         'core',
         'portfoliomodels',
+        'corsheaders',
         'rest_framework',
         'django_filters',
     ]
@@ -60,15 +59,11 @@ data:
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
-        # 'PortfolioBackend.middleware.LogCsrfViewMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
         # MY INSTALLED MIDDLEWRES 
         'corsheaders.middleware.CorsMiddleware',
-        # 'PortfolioBackend.middleware.LogRequestHeadersMiddleware',  # Add this line
-        # 'core.logging_middleware.LogRequestHeadersMiddleware',  # Add this line
-        # 'core.custom_csrf_middleware.CustomCsrfViewMiddleware',  # Add this line
     ]
 
     ROOT_URLCONF = 'PortfolioBackend.urls'
@@ -215,46 +210,7 @@ data:
     #     "http://51.20.65.81",
     #     "https://51.20.65.81"
     # ]
-    CORS_ALLOWED_ORIGINS = [
-    'http://www.ajmal.com',
-    # 'https://www.ajmal.com' ,
-    'http://.*', 
-    'https://.*', 
-    'https://www.ajmal.com:31345', 
-    # 'https://ajmal.com', 
-    'https://198.168.49.2',     
-    'http://ng-service',
-    'http://ng-service:80',
-    'http://fr-service',
-    'http://fr-service:80',
-    'http://10.99.35.173',
-    'http://10.99.35.173:80',
-    'http://10.108.255.157'
-    ]
-
-
-    CSRF_COOKIE_NAME = 'csrftoken'
-    CSRF_COOKIE_SECURE = False
-    CSRF_COOKIE_HTTPONLY = False
-    CSRF_TRUSTED_ORIGINS = [
-    'https://198.168.49.2',
-    'https://198.168.49.2:31345',
-    'http://www.ajmal.com',
-    'http://ajmal.com',
-    # 'https://www.ajmal.com',
-    # 'https://ajmal.com',
-    'http://.*',
-    'https://.*',
-    'http://www.ajmal.com:31345'
-    'http://ajmal.com:31345',
-    'http://ng-service',
-    'http://ng-service:80',
-    'http://fr-service',
-    'http://fr-service:80',
-    'http://10.99.35.173', 
-    'http://10.108.255.157',
-    'http://www.ajmal.com'
-    ]
+    CORS_ALLOWED_ORIGINS = ['http://www.ajmal.com']
 
 
     CORS_ALLOW_CREDENTIALS = True
@@ -264,7 +220,7 @@ data:
         "disable_existing_loggers": False,
         "handlers": {
             "file": {
-                "level": "DEBUG",
+                "level": "ERROR",
                 "class": "logging.FileHandler",
                 'filename': os.path.join(BASE_DIR, 'django.log'),
             },
@@ -272,13 +228,8 @@ data:
         "loggers": {
             "django": {
                 "handlers": ["file"],
-                "level": "DEBUG",
+                "level": "ERROR",
                 "propagate": True,
-            },
-            'PortfolioBackend': {  # Replace 'yourapp' with your app name
-                'handlers': ['file'],
-                'level': 'DEBUG',
-                'propagate': True,
             },
         },
         }
@@ -356,7 +307,6 @@ data:
         "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
         "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
     }
-
 
 
     EMAIL_BACKEND = os.getenv('EMAIL_BACKEND',config('EMAIL_BACKEND'))

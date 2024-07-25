@@ -1,0 +1,211 @@
+To secure the communication channel between your Nginx server and clients, you will need to configure Nginx to use HTTPS with a self-signed certificate. Here’s a detailed explanation of the steps involved:
+
+### 1. Generate Self-Signed Certificates
+Self-signed certificates can be used for securing communication with HTTPS. You can generate them using `openssl` or `make` tools.
+
+#### Using `make` Tool:
+```sh
+make keys KEY=/tmp/nginx.key CERT=/tmp/nginx.crt
+```
+
+#### Using `openssl` Command:
+```sh
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/nginx.key -out /tmp/nginx.crt -subj "/CN=my-nginx/O=my-nginx"
+```
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/www.ajmal.com.key -out /tmp/www.ajmal.com.crt -subj "/CN=www.ajmal.com/O=Ajay"
+
+
+### 2. Create Kubernetes Secrets
+Kubernetes secrets are used to store sensitive information such as TLS certificates. You will need to create a secret from the generated certificates.
+
+#### Using `kubectl` Command:
+```sh
+kubectl create secret tls nginxsecret --key /tmp/nginx.key --cert /tmp/nginx.crt
+```
+
+#### Using YAML File:
+First, convert the certificates to base64 encoding:
+```sh
+cat /tmp/nginx.crt | base64
+cat /tmp/nginx.key | base64
+```
+Create a YAML file (`nginxsecrets.yaml`):
+```yaml
+apiVersion: "v1"
+kind: "Secret"
+metadata:
+  name: "nginxsecret"
+  namespace: "default"
+type: kubernetes.io/tls
+data:
+  tls.crt: "<base64_encoded_certificate>"
+  tls.key: "<base64_encoded_key>"
+```
+Apply the secret:
+```sh
+kubectl apply -f nginxsecrets.yaml
+```
+
+### 3. Create ConfigMap for Nginx Configuration
+A ConfigMap is used to store configuration files.
+
+#### Using `kubectl` Command:
+```sh
+kubectl create configmap nginxconfigmap --from-file=default.conf
+```
+
+`default.conf` file content:
+```nginx
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+
+    listen 443 ssl;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    server_name localhost;
+    ssl_certificate /etc/nginx/ssl/tls.crt;
+    ssl_certificate_key /etc/nginx/ssl/tls.key;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+```
+
+### 4. Deploy Nginx with HTTPS
+Create a Deployment and Service for the Nginx server. The Deployment specifies how many replicas of the Nginx pod to run, and the Service exposes the Nginx pods to the network.
+
+#### YAML File (`nginx-secure-app.yaml`):
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-nginx
+  labels:
+    run: my-nginx
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    run: my-nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+spec:
+  selector:
+    matchLabels:
+      run: my-nginx
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: my-nginx
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: nginxsecret
+      - name: configmap-volume
+        configMap:
+          name: nginxconfigmap
+      containers:
+      - name: nginxhttps
+        image: bprashanth/nginxhttps:1.0
+        ports:
+        - containerPort: 443
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /etc/nginx/ssl
+          name: secret-volume
+        - mountPath: /etc/nginx/conf.d
+          name: configmap-volume
+```
+
+Deploy the application:
+```sh
+kubectl delete deployments,svc my-nginx; kubectl apply -f ./nginx-secure-app.yaml
+```
+
+### 5. Access Nginx Securely
+You can access the Nginx server using the `curl` command.
+
+#### From a Node:
+Get the pod IP:
+```sh
+kubectl get pods -l run=my-nginx -o custom-columns=POD_IP:.status.podIP
+```
+Use `curl` to access the service:
+```sh
+curl -k https://<POD_IP>
+```
+
+### 6. Test from a Pod
+Create a pod that has access to the Nginx certificate and can use `curl` to test the Nginx service.
+
+#### YAML File (`curlpod.yaml`):
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: curl-deployment
+spec:
+  selector:
+    matchLabels:
+      app: curlpod
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: curlpod
+    spec:
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: nginxsecret
+      containers:
+      - name: curlpod
+        command:
+        - sh
+        - -c
+        - while true; do sleep 1; done
+        image: radial/busyboxplus:curl
+        volumeMounts:
+        - mountPath: /etc/nginx/ssl
+          name: secret-volume
+```
+
+Deploy and test:
+```sh
+kubectl apply -f ./curlpod.yaml
+kubectl get pods -l app=curlpod
+kubectl exec curl-deployment-<pod_id> -- curl https://my-nginx --cacert /etc/nginx/ssl/tls.crt
+```
+
+This setup ensures that communication between your Nginx server and clients is secure using HTTPS, with certificates stored and managed securely within Kubernetes.
+
+
+
+
+
+//////////////////////////
+this is link of the explanation (((((((https://github.com/nginxinc/kubernetes-ingress/tree/main/examples/ingress-resources/complete-example)))))))
+2nd option using --insecure option in curl command 
+4. Test the Application
+
+To access the application, curl the coffee and the tea services. We'll use curl's --insecure option to turn off certificate verification of our self-signed certificate and the --resolve option to set the Host header of a request with cafe.example.com
+
+To get coffee:
+
+curl --resolve cafe.example.com:$IC_HTTPS_PORT:$IC_IP https://cafe.example.com:$IC_HTTPS_PORT/coffee --insecure

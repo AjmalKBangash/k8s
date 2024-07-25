@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-django-secret
+  labels:
+    app: bk-pods-label
+type: Opaque
+data:
+  secret-key: ZGphbmdvLWluc2VjdXJlLTQhYiY2bHg1bDAzYWQkamJ0dHklQCMya3ItZjklbiNpZWUkKHBmZTMmbG13b3RwdStzCg==
+  # postgres-host: bG9jYWxob3N0Cg==
+  # postgres-port: NTQzMgo=
+  postgres-user: aGFtYWQ= # base64 encoded 'hamad'
+  postgres-password: cGFzc3dkLWhhbWFkLTMwMg== # base64 encoded 'passwd-hamad-302'
+  postgres-db: aGFtYWRfZGI= # base64 encoded 'hamad_db'

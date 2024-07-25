@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ngdp-service
+  name: fr-service
 spec:
   # type: NodePort
   selector:
-    app: ngdp-pods-label
+    app: fr-pods-label
   ports:
     - protocol: TCP
       port: 80

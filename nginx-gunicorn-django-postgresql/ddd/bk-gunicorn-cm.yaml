@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bk-gunicorn-cm
+data:
+  gunicorn.conf.py: |
+    # gunicorn.conf.py
+    # bind = '127.0.0.1:8000'
+    # Janan de
+    bind = '0.0.0.0:8000'
+    # The backlog setting in Gunicorn defines the maximum number of pending connections that the server will hold in the queue before it starts refusing new connections. This is particularly important when the server is handling a large number of simultaneous connection requests.
+    # backlog: The maximum number of pending connections. Defaults to 2048.
+    backlog = 2048
+    # workers: The number of worker processes. Typically set to (2 * number of CPUs) + 1.
+    workers = 2
+    # worker_class: The type of worker to use. Options include 'sync', 'gevent', 'eventlet', 'tornado', 'gthread', etc.
+    worker_class = 'gthread'
+    # threads: The number of threads per worker. Useful for handling multiple requests in each worker.
+    threads = 2
+    # worker_connections: The maximum number of simultaneous clients. Only relevant for asynchronous workers.
+    worker_connections = 1000
+    # max_requests: The maximum number of requests a worker will process before restarting. Helps prevent memory leaks.
+    max_requests = 1000
+    # max_requests_jitter: Adds a random jitter to max_requests to avoid workers restarting simultaneously.
+    max_requests_jitter = 50
+    # timeout: Workers silent for more than this many seconds are killed and restarted.
+    timeout = 30
+    # graceful_timeout: Timeout for graceful workers restart.
+    graceful_timeout = 30
+    # keepalive: The number of seconds to wait for the next request on a Keep-Alive HTTP connection.
+    keepalive = 2
+    # spew: Enables or disables printing of each line of Python code that is executed. Useful for debugging.
+    spew = False
+    # reload: Enables or disables auto-reload of the code on change.
+    reload = True
+    # reload_engine: Specifies the reload engine to use. Options are 'auto', 'poll'.
+    reload_engine = 'auto'
+    # pidfile: The path to a file where the PID of the master process is stored.
+    pidfile = None
+    # umask: A bitmask for the file mode creation mask.
+    umask = 0
+    # user: The user to run the worker processes as.
+    user = 'root'
+    # group: The group to run the worker processes as.
+    group = 'root'
+    # initgroups: If true, sets the supplementary groups for the worker processes.
+    initgroups = True
+    # accesslog: The file to write access logs to. Use '-' to log to stdout.
+    # accesslog = '/var/log/gunicorn/access.log'
+    accesslog = '/tmp/gunicorn/access.log'
+    # access_log_format: The access log format.
+    access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+    # errorlog: The file to write error logs to. 
+    # errorlog = '/var/log/gunicorn/error.log'
+    errorlog = '/tmp/gunicorn/error.log'
+    loglevel = 'info'
+    # loglevel: The granularity of error log output. Options are 'debug', 'info', 'warning', 'error', 'critical'.
+    capture_output = True
+    # capture_output: Redirect stdout/stderr to error log.
+    logger_class = 'gunicorn.glogging.Logger'
+    # logger_class: The logger class to use.
+    logconfig = None
+    # daemon: If true, run the Gunicorn server in the background (daemon mode).
+    daemon = False
+    # preload_app: If true, load application code before the worker processes are forked.
+    preload_app = False
+    # chdir: The directory to change to before loading the application.
+    chdir = 'PortfolioBackend'
+    # limit_request_line: The maximum size of an HTTP request line.
+    limit_request_line = 8190
+    # limit_request_field_size: The maximum size of HTTP request header fields.
+    limit_request_field_size = 8190
+    # limit_request_fields: The maximum number of HTTP request header fields.
+    limit_request_fields = 200
+    # worker_tmp_dir: A directory to use for the worker temporary files.
+    worker_tmp_dir = '/tmp/gunicorn'
+    # secure_scheme_headers: A dictionary of headers to mark requests as secure.
+    secure_scheme_headers = {
+        "X-FORWARDED-PROTO": "https",
+        "X-FORWARDED-SCHEME": "https",
+        "X-FORWARDED-SSL": "on"
+    }
+    # forwarded_allow_ips: A comma-separated list of IPs allowed to set the X-Forwarded-For header. This hould be ip address of the ec2 instance load balancers infront of your nginx etc or the load balancers in ec2 instance 
+    forwarded_allow_ips = "0.0.0.0"

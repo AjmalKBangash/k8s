@@ -1,49 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bk-depl
+  name: ng-depl
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: bk-pods-label
+      app: ng-pods-label
   template:
     metadata:
       labels:
-        app: bk-pods-label
+        app: ng-pods-label
     spec:
-      # initContainers:
-      #   - name: init-static
-      #     image: busybox
-      #     command:
-      #       [
-      #         "sh",
-      #         "-c",
-      #         "cp -r /PortfolioBackend/staticdirectory/* /mnt/data/SharedDirectory/staticdirectory/",
-      #       ]
-      #     volumeMounts:
-      #       - mountPath: /PortfolioBackend/staticdirectory
-      #         name: existing-static
-      #       - mountPath: /mnt/data/SharedDirectory/staticdirectory
-      #         name: shared-storage
-      #   - name: init-media
-      #     image: busybox
-      #     command:
-      #       [
-      #         "sh",
-      #         "-c",
-      #         "cp -r /PortfolioBackend/Media/* /mnt/data/SharedDirectory/Media/",
-      #       ]
-      #     volumeMounts:
-      #       - mountPath: /PortfolioBackend/Media
-      #         name: existing-media
-      #       - mountPath: /mnt/data/SharedDirectory/Media
-      #         name: shared-storage
       containers:
-        - name: bk
-          image: port-backend:0.0.12
+        - name: ng
+          image: nginx
           ports:
-            - containerPort: 8000
+            - containerPort: 80
           env:
             - name: DB_HOST
               value: "postgres"

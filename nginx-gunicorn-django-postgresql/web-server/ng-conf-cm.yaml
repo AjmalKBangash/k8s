@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ng-conf-cm
+data:
+  nginx.conf: |
+    # Number of worker processes
+    worker_processes 1;  # You can adjust this based on your needs and server capacity
+
+    # Settings for handling connections
+    events {
+        worker_connections 1024;  # The maximum number of connections per worker process
+        multi_accept on;  # Allow a worker process to accept multiple connections at once
+        use epoll;  # Efficient I/O event notification for Linux
+    }
+
+    # HTTP configuration block
+    http {
+        real_ip_header X-Forwarded-For;
+        set_real_ip_from 0.0.0.0/0;  # Trust all sources (adjust as needed)
+        # Basic settings
+        sendfile on;  # Enable efficient file transfers
+        tcp_nopush on;  # Send headers in one packet
+        tcp_nodelay on;  # Disable Nagle's algorithm for latency-sensitive applications
+        keepalive_timeout 65;  # Time to keep connections open
+        types {
+            text/html html;
+            text/css css;
+            text/xml xml;
+            image/gif gif;
+            image/jpeg jpg;
+            application/javascript js;
+            application/rss+xml rss;
+            application/x-font-ttf ttf;
+            font/opentype otf;
+            image/x-icon ico;
+            application/x-shockwave-flash swf;
+            application/json json;
+            application/xml xml;
+            application/x-www-form-urlencoded;
+        }
+
+        # Server configuration
+        server {
+            listen 80;
+            server_name ng-service;
+
+            # Uncomment the following lines for SSL configuration
+            # listen 443 ssl;
+            # ssl_certificate /etc/nginx/ssl/tls.crt;
+            # ssl_certificate_key /etc/nginx/ssl/tls.key;
+            # ssl_protocols TLSv1.2 TLSv1.3;  # Secure protocols
+            # ssl_ciphers 'ECDH+AESGCM:ECDH+CHACHA20:!aNULL:!eNULL:!MD5:!RC4';  # Secure ciphers
+            # ssl_prefer_server_ciphers on;  # Prefer server-defined ciphers
+            # ssl_session_cache shared:SSL:10m;  # Cache SSL sessions
+
+            # Static file locations
+            location /static/ {
+                alias /usr/share/nginx/html/staticdirectory/;
+            }
+
+            location /Media/ {
+                alias /usr/share/nginx/html/Media/;
+            }
+
+            # Proxy settings for dynamic content
+            location / {
+                if ($request_method = 'OPTIONS') {
+                    add_header 'Access-Control-Allow-Origin' '*';
+                    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
+                    add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type';
+                    return 204;
+                }
+
+                add_header 'Access-Control-Allow-Origin' '*';
+                add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE';
+                add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type';
+
+                proxy_pass http://bk-service:8000;  # Backend service (Gunicorn)
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                # proxy_set_header X-Forwarded-Proto https;
+
+                # Forward the CSRF token as a header if needed
+                # proxy_set_header X-CSRFToken $cookie_csrftoken;
+            }
+        }
+    }
