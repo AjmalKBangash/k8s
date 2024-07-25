@@ -3,12 +3,11 @@ kind: Service
 metadata:
   name: bk-service
 spec:
-  # type: NodePort
-  type: ClusterIP
+  type: NodePort
   selector:
     app: bk-pods-label
   ports:
     - protocol: TCP
       port: 8000
       targetPort: 8000
-      # nodePort: 32000
+      nodePort: 32000

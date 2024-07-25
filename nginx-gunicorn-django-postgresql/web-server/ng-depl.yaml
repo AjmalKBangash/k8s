@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ng-depl
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ng-pods-label
+  template:
+    metadata:
+      labels:
+        app: ng-pods-label
+    spec:
+      containers:
+        - name: ng-container
+          image: nginx
+          ports:
+            - containerPort: 80
+            # - containerPort: 443
+          volumeMounts:
+            - mountPath: "/usr/share/nginx/html/Media"
+              name: ng-static-pv-volume
+              subPath: Media
+            - mountPath: "/usr/share/nginx/html/staticdirectory"
+              name: ng-static-pv-volume
+              subPath: staticdirectory
+            - mountPath: "/etc/nginx/nginx.conf"
+              name: ng-conf-pv-volume
+              subPath: nginx.conf
+            # - mountPath: /etc/nginx/ssl
+            #   name: tls-secret
+      volumes:
+        - name: ng-static-pv-volume
+          persistentVolumeClaim:
+            claimName: ng-static-pvc
+        - name: ng-conf-pv-volume
+          configMap:
+            name: ng-conf-cm
+          # persistentVolumeClaim:
+          # claimName: ng-conf-pvc
+        # - name: tls-secret
+        #   secret:
+        #     secretName: ng-sec

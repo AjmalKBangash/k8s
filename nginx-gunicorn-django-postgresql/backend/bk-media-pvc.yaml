@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: bk-static-pvc
+  name: bk-media-pvc
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 5Gi
-  volumeName: bk-static-pv
+  volumeName: bk-media-pv
   selector:
     matchLabels:
-      type: bk-static-pv-label
+      type: bk-media-pv-label

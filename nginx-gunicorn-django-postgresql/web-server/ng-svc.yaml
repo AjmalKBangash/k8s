@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: bk-service
+  name: ng-service
 spec:
   # type: NodePort
   type: ClusterIP
   selector:
-    app: bk-pods-label
+    app: ng-pods-label
   ports:
     - protocol: TCP
-      port: 8000
-      targetPort: 8000
-      # nodePort: 32000
+      port: 80
+      targetPort: 80
+      # nodePort: 31345

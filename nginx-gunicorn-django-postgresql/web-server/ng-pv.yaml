@@ -1,18 +1,19 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: bk-static-pv
+  name: ng-static-pv
   labels:
-    type: bk-static-pv-label
+    type: ng-pods-label
 spec:
   capacity:
-    storage: 5Gi
+    storage: 2Gi
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: "/mnt/data/SharedDirectory"
+    # path: "/mnt/data/Portfolio-Frontend/build"
   # claimRef:   it is very important because through labels connections pv is not connecting to pvc while through  claimRef: it is connecting correctly
   claimRef:
     namespace: django-react
-    name: bk-static-pvc
+    name: ng-static-pvc

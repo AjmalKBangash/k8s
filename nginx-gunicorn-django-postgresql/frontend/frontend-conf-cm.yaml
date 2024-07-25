@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fr-conf-cm
+data:
+  nginx.conf: |
+    worker_processes 1;  # Adjust based on your needs and server capacity
+
+    events {
+        worker_connections 1024;  # Max number of connections per worker process
+        multi_accept on;  # Allow a worker process to accept multiple connections at once
+        use epoll;  # Efficient I/O event notification for Linux
+    }
+
+    http {
+        include mime.types;  # Load standard MIME types
+        default_type application/octet-stream;  # Default MIME type
+
+        sendfile on;  # Enable efficient file transfers
+        tcp_nopush on;  # Send headers in one packet
+        tcp_nodelay on;  # Disable Nagle's algorithm for latency-sensitive applications
+        keepalive_timeout 65;  # Time to keep connections open
+
+        server {
+            listen 80;
+            server_name www.ajmal.com;
+
+            root /usr/share/nginx/html;
+            index index.html;
+
+            location / {
+                try_files $uri $uri/ /index.html;
+            }
+
+            location /api/ {
+            proxy_pass http://ng-service:80;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            }
+
+            # Optional: Configure caching for static assets
+            # location ~* \.(jpg|jpeg|gif|png|ico|css|js)$ {
+            #     expires 30d;
+            #     add_header Cache-Control "public";
+            # }
+
+            error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+                root /usr/share/nginx/html;
+            }
+        }
+    }
