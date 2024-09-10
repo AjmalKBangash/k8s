@@ -41,7 +41,7 @@ spec:
       #         name: shared-storage
       containers:
         - name: bk
-          image: port-backend:0.0.12
+          image: port-backend:0.0.14
           ports:
             - containerPort: 8000
           env:

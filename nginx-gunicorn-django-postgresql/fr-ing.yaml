@@ -23,7 +23,7 @@ metadata:
   name: fr-ing
   annotations:
     # nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
     - host: www.ajmal.com
@@ -42,6 +42,16 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: fr-service
+                name: ng-service
                 port:
                   number: 80
+    # - host: backend.ajmal.com
+    #   http:
+    #     paths:
+    #       - path: /api/
+    #         pathType: Prefix
+    #         backend:
+    #           service:
+    #             name: ng-service
+    #             port:
+    #               number: 80

@@ -176,20 +176,20 @@ data:
     # Static files (CSS, JavaScript, Images)
     # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-    STATIC_URL = 'static/'
+    STATIC_URL = 'api/static/'
 
     STATICFILES_DIRS = [
         # Add the path to your project's static files (e.g., 'myproject/static/')
         # 'PortfolioBackend/static/',
-        os.path.join(BASE_DIR, 'static'),
+        os.path.join(BASE_DIR, 'api/static'),
         # os.path.join(BASE_DIR, 'Media')
     ]
 
-    MEDIA_URL = 'Media/'
+    MEDIA_URL = 'api/Media/'
 
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'Media')
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'api/Media')
 
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticdirectory')
+    STATIC_ROOT = os.path.join(BASE_DIR, 'api/staticdirectory')
     # STATIC_ROOT = BASE_DIR / 'staticdirectory'
 
     # Default primary key field type

@@ -43,7 +43,7 @@ data:
         # Server configuration
         server {
             listen 80;
-            server_name ng-service;
+            server_name backend.ajmal.com;
 
             # Uncomment the following lines for SSL configuration
             # listen 443 ssl;
@@ -55,11 +55,11 @@ data:
             # ssl_session_cache shared:SSL:10m;  # Cache SSL sessions
 
             # Static file locations
-            location /static/ {
+            location /api/static/ {
                 alias /usr/share/nginx/html/staticdirectory/;
             }
 
-            location /Media/ {
+            location /api/Media/ {
                 alias /usr/share/nginx/html/Media/;
             }
 
