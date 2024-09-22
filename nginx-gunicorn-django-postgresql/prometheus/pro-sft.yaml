@@ -1,0 +1,136 @@
+# Always look forward that whether i am deploying something which is having dynamic data which is changing and evolving overtime. There are three types of dynamic data
+# **1) Real Time Data
+# *2) Time Series Data*
+# 3) Streaming Data**
+# here Prometheus is having time-series data which changing and evolving over time.
+
+# When we deploy one Prometheus pod it is okay for data retrieval and writing but if we increase the pods from 1 to many and we have 3 replicas in deployment all for read,write operations and we are writing to one replica and at the same time we are reading from the second replica here it will not fetch the data because the data is written to replica 1 and it has not been replicated (copied) yet to its second and third replicas. That is why we need **Statefulset** and **StatefulSet** ensures that each pod retains its persistent volume claim (PVC), so even if the pod is restarted or rescheduled, it retains access to its data.
+# With **Deployment**, there is no built-in mechanism for persistent storage, and it may lead to data loss if a pod is rescheduled.
+# Hope it worked out.
+
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: prometheus
+#   labels:
+#     app: prometheus-pods-label
+# spec:
+#   serviceName: "prometheus-headless"
+#   replicas: 3 # Set the number of replicas
+#   selector:
+#     matchLabels:
+#       app: prometheus-pods-label
+#   template:
+#     metadata:
+#       labels:
+#         app: prometheus-pods-label
+#     spec:
+#       containers:
+#         - name: prometheus
+#           # image: prom/prometheus:v2.41.0  # Adjust the Prometheus version if necessary
+#           image: prom/prometheus
+#           args:
+#             - "--config.file=/etc/prometheus/prometheus.yml"
+#             - "--storage.tsdb.path=/prometheus/"
+#             - "--web.enable-lifecycle"
+#           ports:
+#             - containerPort: 9090 # Prometheus port
+#           volumeMounts:
+#             - name: prometheus-config-volume
+#               mountPath: /etc/prometheus/
+#             - name: prometheus-data
+#               mountPath: /prometheus
+#           resources:
+#             requests:
+#               memory: "1Gi"
+#               cpu: "500m"
+#             limits:
+#               memory: "2Gi"
+#               cpu: "1"
+#           readinessProbe:
+#             httpGet:
+#               path: /-/ready
+#               port: 9090
+#             initialDelaySeconds: 5
+#             periodSeconds: 10
+#           livenessProbe:
+#             httpGet:
+#               path: /-/healthy
+#               port: 9090
+#             initialDelaySeconds: 15
+#             timeoutSeconds: 5
+#   volumeClaimTemplates:
+#     - metadata:
+#         name: prometheus-data
+#       spec:
+#         accessModes: ["ReadWriteOnce"]
+#         resources:
+#           requests:
+#             storage: 3Gi
+#   volumes:
+#     - name: prometheus-config-volume
+#       configMap:
+#         name: prometheus-config
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus-pods-label
+spec:
+  serviceName: "prometheus-headless"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: prometheus-pods-label
+  template:
+    metadata:
+      labels:
+        app: prometheus-pods-label
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.41.0
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus/"
+            - "--web.enable-lifecycle"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: prometheus-config-volume
+              mountPath: /etc/prometheus/ # Mount the ConfigMap here
+            - name: prometheus-data
+              mountPath: /prometheus # Mount for data storage
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+      volumes:
+        - name: prometheus-config-volume
+          configMap:
+            name: prometheus-config # Reference the ConfigMap here
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheus-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 3Gi

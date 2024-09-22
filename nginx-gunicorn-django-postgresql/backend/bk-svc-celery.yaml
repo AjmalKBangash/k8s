@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bk-service-celery
+spec:
+  # type: NodePort
+  type: ClusterIP
+  selector:
+    app: bk-pods-label-celery
+  ports:
+    - protocol: TCP
+      port: 9002 # Port exposed by the service
+      targetPort: 9002 # Port on the Celery pod where the metrics are available
+      # nodePort: 31767

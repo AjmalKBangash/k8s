@@ -5,7 +5,7 @@ metadata:
 data:
   nginx.conf: |
     # Number of worker processes
-    worker_processes 1;  # You can adjust this based on your needs and server capacity
+    worker_processes 2;  # You can adjust this based on your needs and server capacity
 
     # Settings for handling connections
     events {

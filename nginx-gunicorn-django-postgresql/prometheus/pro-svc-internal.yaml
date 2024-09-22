@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-svc-internal
+  labels:
+    app: prometheus-svc-internal-label
+spec:
+  type: ClusterIP # Internal-only access
+  ports:
+    - port: 9090
+      targetPort: 9090
+  selector:
+    app: prometheus-pods-label

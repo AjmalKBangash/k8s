@@ -53,6 +53,12 @@ data:
         'portfoliomodels',
         'rest_framework',
         'django_filters',
+        
+        # PROMETHEUS
+        'django_prometheus',
+        # DJANGO CELERY BEAT FOR DJANGO CELERY TASKS SCHEDULING
+        'django_celery_beat',
+
     ]
 
     MIDDLEWARE = [
@@ -138,6 +144,36 @@ data:
             'PORT': os.getenv('DB_PORT',config('DB_PORT')),
         }
     }
+
+    # settings.py
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': 'redis://redis-headless:6379/3',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+                # 'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+                'SOCKET_TIMEOUT': 5,
+                'SOCKET_CONNECT_TIMEOUT': 5,
+                'IGNORE_EXCEPTIONS': True,
+                'CONNECTION_POOL_KWARGS': {
+                    'max_connections': 100,
+                    'retry_on_timeout': True,
+                },
+                # Redis persistence configuration
+                # "PERSISTENCE": True,
+                # "PERSISTENCE_TYPE": "rdb",  # or 'aof'
+                # "PERSISTENCE_FILENAME": "/path/to/rdb_file.rdb",  # or 'aof_file.aof'
+                # "PERSISTENCE_INTERVAL": 60,  # Seconds
+            },
+            'TIMEOUT': 60 * 15,  # 15 minutes
+            'KEY_PREFIX': 'portfoliobackend_',
+        }
+    }
+
+    # Optional: Cache timeout (default timeout is 300 seconds)
+    CACHE_TTL = 60 * 15  # 15 minutes
 
 
 
@@ -366,3 +402,162 @@ data:
     EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL',config('EMAIL_USE_SSL'))
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER',config('EMAIL_HOST_USER'))  # Your Gmail email address
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD',config('EMAIL_HOST_PASSWORD')) # Your Gmail app passwor
+
+    # CELERY CONFIGURATIONS 
+
+    # CELERY SETTINGS 
+    # Define the name of the default Celery application.
+    CELERY_APP_NAME = 'PortfolioBackend'  # Default: None
+
+    # Specify the broker URL; in this case, we are using Redis as the broker.
+    CELERY_BROKER_URL = 'redis://redis-headless:6379/0'  # Default: 'amqp://guest@localhost//'
+
+    # Specifies the backend used to store task results; here, we use Redis.
+    # CELERY_RESULT_BACKEND = 'redis://redis-headless:6379/1'  # Default: None
+
+    # CELERY_CACHE_BACKEND_OPTIONS = {
+    #     'expires': 3600  # 1 hour cache expiration for task results
+    # }
+
+    CELERY_WORKER_SEND_TASK_EVENTS = True  # Equivalent to adding -E in the CLI
+
+    CELERY_WORKER_LOG_LEVEL = 'info'  # Equivalent to --loglevel=info
+
+    # Defines the serializer used for the task messages.
+    CELERY_TASK_SERIALIZER = 'json'  # Default: 'json'
+
+    # Defines the serializer used for the task results.
+    CELERY_RESULT_SERIALIZER = 'json'  # Default: 'json'
+
+    # Controls the serialization format used to pass messages between tasks.
+    CELERY_ACCEPT_CONTENT = ['json']  # Default: ['json']
+
+    # Enables/disables task result storage. If disabled, task results will not be stored.
+    CELERY_IGNORE_RESULT = True  # Default: False
+
+    # If enabled, worker logs detailed task information including input arguments.
+    # Enable or disable automatic retrying of tasks.
+    CELERY_TASK_ALWAYS_EAGER = False  # Default: False
+
+    # Controls the time-to-live (TTL) for task results in the backend.
+    CELERY_RESULT_EXPIRES = 3600 * 2 # Default: None (never expire)
+
+    # Sets the soft time limit (in seconds) for task execution.
+    CELERY_TASK_SOFT_TIME_LIMIT = None  # Default: None
+
+    # Sets the hard time limit (in seconds) for task execution.
+    CELERY_TASK_TIME_LIMIT = None  # Default: None
+
+    # Specifies the worker concurrency (number of tasks a worker can handle simultaneously).
+    CELERY_WORKER_CONCURRENCY = 2  # Default: Number of CPUs available
+
+    # Sets the prefetch multiplier (number of tasks a worker can prefetch).
+    CELERY_WORKER_PREFETCH_MULTIPLIER = 2  # Default: 4
+
+    # Configures the visibility timeout for tasks in Redis (time a worker can reserve a task).
+    CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}  # Default: {}
+
+    # Specifies the default queue for tasks that are not assigned to any specific queue.
+    CELERY_DEFAULT_QUEUE = 'default'  # Default: 'default'
+
+    # Lists available queues in the broker.
+    CELERY_QUEUES = None
+    # CELERY_QUEUES = {
+    #     'default': {
+    #         'exchange': 'default',
+    #         'routing_key': 'default',
+    #     },
+    # }  # Default: None (single queue named 'celery')
+    # CELERY_QUEUES = {
+    #     'high_priority': {
+    #         'exchange': 'high_priority',
+    #         'routing_key': 'high_priority',
+    #     },
+    #     'low_priority': {
+    #         'exchange': 'low_priority',
+    #         'routing_key': 'low_priority',
+    #     },
+    # }
+    # CELERY_ROUTES = {
+    #     'PortfolioBackend.tasks.high_priority_task': {'queue': 'high_priority'},
+    #     'PortfolioBackend.tasks.low_priority_task': {'queue': 'low_priority'},
+    # }
+
+
+    # Defines a list of periodic tasks that should be executed.
+    # CELERY_BEAT_SCHEDULE = {}  # Default: {}
+    CELERY_BEAT_SCHEDULE = { # THIS IS WORKING CORRECTLY AS EXPECTED TO RUN PERIODIC OR SCHEDULED TASKS IN DJANGO THROUGH CELERY WHICHIS THE MOST EFFECTIVE WAY FOR RUNNING TASKS BECAUSE IT IS RUNNING ASYNCHRONOUSLY NOT IN DJANGO MAIN THREAD
+        'notify_me_after_10_seconds': {
+            'task': 'PortfolioBackend.task.Notify',
+            # 'schedule': crontab(minute = '*/1'),
+            'schedule': 5,
+            'args': [4,8]
+        }
+        }  # Default: {}
+
+    # Controls whether to create a beat instance for periodic tasks.
+    # CELERY_BEAT_SCHEDULER = 'celery.beat:PersistentScheduler'  # Default: 'celery.beat:PersistentScheduler' THIS IS FOR COMMON APPPLICATIONS
+    CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler' # WHILE THIS IS SPECIFICALLY FOR DJANGO
+
+    # THIS WIL EXPLEICITLY FIND TASKS DEFINED IN THE ADOPTION.APP MODULE(FILE) AND WILL SCHEDULE AND RUN IT
+    CELERY_IMPORTS = (
+        'PortfolioBackend.task',
+    )
+
+    # Configures the backend to use for storing periodic task results.
+    # CELERY_CACHE_BACKEND = None  # Default: None
+    # CELERY_CACHE_BACKEND = 'redis://redis-headless:6379/2'  # Default: None
+
+    # Sets the timezone for Celery; it should match Django's TIME_ZONE.
+    # CELERY_TIMEZONE = 'UTC' # Depricated # Default: 'UTC' Deprecation: The CELERY_TIMEZONE setting is deprecated. Celery now uses the TIME_ZONE setting from Django, so you don't need to set it separately in Celery.
+    # Enables/disables UTC timezone awareness.
+    CELERY_ENABLE_UTC = True  # Default: True
+
+    # Configure the rate limit for tasks, e.g., '10/m' (10 tasks per minute).
+    CELERY_TASK_RATE_LIMIT = None  # Default: None
+
+    # Enables/disables the sending of events (used by monitoring tools like Flower).
+    CELERY_SEND_EVENTS = True  # Default: False
+
+    # Define the event backend (for monitoring task execution).
+    CELERY_EVENT_QUEUE_PREFIX = 'prometheus'  # Default: 'celeryev'
+
+    # Defines the queue used to store events.
+    CELERY_EVENT_QUEUE_TTL = None  # Default: None
+
+    # Control the maximum number of tasks a worker will process before being replaced.
+    CELERYD_MAX_TASKS_PER_CHILD = None  # Default: None
+
+    # Sets the path to the PID file for the Celery worker process.
+    CELERYD_PIDFILE = None  # Default: None
+
+    # Sets the maximum number of retries before a task is marked as failed.
+    CELERY_TASK_MAX_RETRIES = 3  # Default: 3
+
+    # Specifies the default retry delay (in seconds) for tasks.
+    CELERY_TASK_DEFAULT_RETRY_DELAY = 30  # Default: 300 seconds (5 minutes)
+
+    # Enables/disables task compression.
+    CELERY_TASK_COMPRESSION = None  # Default: None
+
+    # CELERY_WORKER_HEARTBEAT_INTERVAL = 60  # Interval in seconds
+    # CELERY_ACKS_LATE = True # Depricated  # Acknowledge tasks after execution (for retry scenarios) 
+    CELERY_TASK_ACKS_LATE = True
+    CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+    CELERY_TASK_REJECT_ON_WORKER_LOST = True   # Re-queue tasks if worker dies
+    CELERYD_MAX_MEMORY_PER_CHILD = 500000  # Max memory per worker in KB (500MB)
+    CELERY_WORKER_ENABLE_REMOTE_CONTROL = True  # Disable remote control if not needed
+    # CELERY_IMPORTS = ('PortfolioBackend_app.tasks',)  # Only allow specific tasks to be imported
+    # CELERY_SECURITY_KEY = "mykey"
+    # CELERY_SECURITY_CERTIFICATE = "/path/to/public.pem"
+    # CELERY_SECURITY_CERT_STORE = "/path/to/certs"
+
+
+
+
+    # COMMANDS FOR STARTING DJANGO OR MAY BE IN PRODUCTION TOO 
+    # python manage.py runserver 0.0.0.0:8000 # IF STARTING DJANGO SERVER AND IF YOU ARE RUNNING REDIS DATABSE IN DOCKER YOU NEED TO START DJANGO WITH 0.0.0.0:8000 OR ANY OTHER PORT SO THAT DJANGO CAN LISTEN FROM EVERY ADDRESS NOT ONLY FROM LOCALHOST WHICH IS BY DEFAULT
+    # python manage.py collectstatic
+    # python exporter.py # skip this step as it is already configured in celery_adoption_app.py file which is good and giving signals # CELERY PYTHON FILE FOR STARTING (EXPORTRING) PROMETHEUS MEYRICS FOR CELERY
+    # celery -A Adoption worker --loglevel=info # STARTING PROMETHEUS WORKERS (ALL CONFIGURATIONS OF PROMETHEUS IN THE SETTINGS.PY FILE IN DJANGO PROJECT)
+    # celery -A Adoption beat --loglevel=info # STARTING PROMETHEUS BEAT (BEAT IS A SCHEDULER WHERE WE CAN SCHEDULE TASKS LIKE SENDING EMAILS, RUNNING ANY SCRIPTS IN DJANGO PROJECT IN PRODUCTION ETC)

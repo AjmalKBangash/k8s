@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s  # Scrape targets every 15 seconds
+    scrape_configs:
+      # Scrape configuration for Prometheus itself
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+          # localhost refers to the same machine or container where Prometheus is running, so Prometheus can reach its own metrics directly at localhost:9090.
+          # Using prometheus-internal:9090 would attempt to resolve the DNS for the prometheus-internal Service, which might go through the Kubernetes network stack. Since the Prometheus Pod is querying itself, localhost is the most direct way to access its own metrics.
+
+      # Scrape configuration for Django metrics
+      - job_name: 'django'
+        static_configs:
+          - targets: ['bk-service:8000']  # Replace 'bk-service' with your Django service name
+        metrics_path: '/api/metrics'   
+
+      # Scrape configuration for Celery metrics
+      - job_name: 'celery'
+        static_configs:
+          - targets: ['bk-service-celery:9002']  # Replace with the port where Celery metrics are exposed

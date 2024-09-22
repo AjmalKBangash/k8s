@@ -12,6 +12,13 @@ postgresql --
 nginx with django (gunicorn or wsg) --
 celery -- ? Leave it as of now
 redis ? -- ? Leave it as of now
+prometheus -- ? Leave it as of now
+
+111 celery with msg broker redis 
+222 export celery metrics 
+333 export django metrics
+444 prometheus 
+555 redis as cache for today 
 
 
 1--FRONTEND--) The best approach is to decouple services whoch k8s is all bout (microservices) it means that react with nginx:lightweight 

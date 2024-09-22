@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bk-depl
+  name: bk-depl-celery
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: bk-pods-label
+      app: bk-pods-label-celery
   template:
     metadata:
       labels:
-        app: bk-pods-label
+        app: bk-pods-label-celery
     spec:
       # initContainers:
       #   - name: init-static
@@ -40,38 +40,35 @@ spec:
       #       - mountPath: /mnt/data/SharedDirectory/Media
       #         name: shared-storage
       containers:
-        - name: bk
+        - name: bk-celery
           # image: port-backend:0.0.14
-          image: ajmalkhanbangash/port-backend:0.1.4
+          image:
+            ajmalkhanbangash/port-backend:0.1.4
+            # command:
+            # [
+            #   "gunicorn",
+            #   "--config",
+            #   "gunicorn.conf.py",
+            #   "PortfolioBackend.wsgi:application",
+            # ]
+            # command:
+            #   [
+            #     "celery",
+            #     "-A",
+            #     "PortfolioBackend",
+            #     "worker",
+            #     "--loglevel=info",
+            #     "&&",
+            #     "celery",
+            #     "-A",
+            #     "PortfolioBackend",
+            #     "beat",
+            #     "--loglevel=info",
+            #   ]
           command:
-            [
-              "gunicorn",
-              "--config",
-              "gunicorn.conf.py",
-              "PortfolioBackend.wsgi:application",
-            ]
-          # command:
-          #   [
-          #     "celery",
-          #     "-A",
-          #     "PortfolioBackend",
-          #     "worker",
-          #     "--loglevel=info",
-          #     "&&",
-          #     "celery",
-          #     "-A",
-          #     "PortfolioBackend",
-          #     "beat",
-          #     "--loglevel=info",
-          #   ]
-          # command:
-          #   [
-          #     "sh",
-          #     "-c",
-          #     "celery -A PortfolioBackend worker --loglevel=info & celery -A PortfolioBackend beat --loglevel=info",
-          #   ]
+            ["sh", "-c", "celery -A PortfolioBackend worker --loglevel=info"]
           ports:
-            - containerPort: 8000
+            - containerPort: 9002
           env:
             - name: DB_HOST
               value: "postgres"
@@ -101,22 +98,22 @@ spec:
             - mountPath: "/PortfolioBackend/PortfolioBackend/settings.py"
               name: bk-pv-volume
               subPath: settings.py
-            - mountPath: /PortfolioBackend/staticdirectory
-              name: shared-storage
-              subPath: staticdirectory
-            - mountPath: /PortfolioBackend/Media
-              name: shared-storage
-              subPath: Media
+            # - mountPath: /PortfolioBackend/staticdirectory
+            #   name: shared-storage
+            #   subPath: staticdirectory
+            # - mountPath: /PortfolioBackend/Media
+            #   name: shared-storage
+            #   subPath: Media
       volumes:
         - name: bk-pv-volume
           configMap:
             name: bk-settings-cm
-        - name: bk-pv-volume02
-          configMap:
-            name: bk-gunicorn-cm
-        - name: shared-storage
-          persistentVolumeClaim:
-            claimName: bk-static-pvc
+        # - name: bk-pv-volume02
+        #   configMap:
+        #     name: bk-gunicorn-cm
+        # - name: shared-storage
+        #   persistentVolumeClaim:
+        #     claimName: bk-static-pvc
         # - name: existing-static
         #   emptyDir: {} # Use an empty directory for temporary storage during init
         # - name: existing-media
