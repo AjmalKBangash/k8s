@@ -1,0 +1,337 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio-deployment
+  labels:
+    app: portfolio
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: portfolio
+  template:
+    metadata:
+      labels:
+        app: portfolio
+    spec:
+      containers:
+      - name: portfolio
+        image: ajmalkhanbangash/portfolio:0.0.8
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portfolio-service
+  labels:
+    app: portfolio
+spec:
+  type: ClusterIP
+  # type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: portfolio
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+  labels:
+    app: django-app
+spec:
+  replicas: 2  # Adjust based on your desired scale
+  selector:
+    matchLabels:
+      app: django-app
+  template:
+    metadata:
+      labels:
+        app: django-app
+    spec:
+      containers:
+        - name: django-app
+          image: ajmalkhanbangash/portfolio_backend_prod:0.0.51
+          ports:
+            - containerPort: 80
+            - containerPort: 8000
+          env:
+            - name: SECRET_KEY
+              value: "django-insecure-4!b&6lx5l03ad$jbtty%@#2kr-f9%n#iee$(pfe3&lmwotpu+s"
+            - name: DB_NAME
+              value: "ajay_db"
+            - name: DB_USER
+              value: "ajay"
+            - name: DB_PASSWORD
+              value: "passwd-ajay-302"
+            - name: DB_HOST
+              value: "db-ser"
+            - name: DB_PORT
+              value: "5432"
+            - name: EMAIL_BACKEND
+              value: "django.core.mail.backends.smtp.EmailBackend"
+            - name: EMAIL_HOST
+              value: "smtp.gmail.com"
+            - name: EMAIL_PORT
+              value: "465"
+            - name: EMAIL_USE_TLS
+              value: "True"
+            - name: EMAIL_USE_SSL
+              value: "True"
+            - name: EMAIL_HOST_USER
+              value: "ak1489007@gmail.com"
+            - name: EMAIL_HOST_PASSWORD
+              value: "oloq gjpe askk rhud"
+            - name: ALLOWED_HOSTS
+              value: "'*','ajmalkhan.online', 'api.ajmalkhan.online','www.ajmalkhan.online', 'localhost','172.31.7.179','172.31.16.237', '172.31.0.0/16', '10.0.0.0/8', '192.168.0.0/16'"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "'https://api.ajmalkhan.online', 'https://www.ajmalkhan.online', 'http://localhost:3000', 'http://172.31.7.179', 'http://172.31.16.237','http://172.31.0.0', 'http://10.0.0.0', 'http://192.168.0.0', 'http://*', 'https://*'"
+            - name: CSRF_TRUSTED_ORIGINS
+              value: "'https://api.ajmalkhan.online', 'https://www.ajmalkhan.online', 'http://localhost:3000', 'http://172.31.7.179', 'http://172.31.16.237', 'http://172.31.0.0/32', 'http://172.31.0.0/16', 'http://10.0.0.0/8', 'http://192.168.0.0/16'"
+      #     volumeMounts:
+      #       - name: static-volume
+      #         mountPath: /app/static
+      #       - name: media-volume
+      #         mountPath: /app/media
+      # volumes:
+      #   - name: static-volume
+      #     emptyDir: {}
+      #   - name: media-volume
+      #     emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-app-service
+spec:
+  selector:
+    app: django-app
+  ports:
+    - name: http       # Name for port 80
+      protocol: TCP
+      port: 80          # The port that the service will expose internally
+      targetPort: 80     # The port your Nginx app (or another service) will be running on
+    - name: gunicorn   # Name for port 8000
+      protocol: TCP
+      port: 8000        # The port that the service will expose internally
+      targetPort: 8000  # The port your Django app (Gunicorn) will be running on
+  type: ClusterIP        # Exposes the service internally
+---
+# THE ING CLASS FOR ING RESOURCE WITH AWS LBC CONTROLLER HAS BEEN ADDED 
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: alb
+spec:
+  controller: ingress.k8s.aws/alb
+---
+# THE ING RES FOR NGINX SERVICE SNDF DEPL AND FOR AWS LBC ALB PROVISIOING HAS BEEN ADDED
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress-ip
+  annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: mmmm-alb-ip-mode
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/subnets: subnet-0a74bcbfbb7e8dc8b,subnet-00d9de26b3f0a0544
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:992382812472:certificate/dc9d596e-58f7-414c-a7cd-c2e091a7b5ad"
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-1-2017-01
+    alb.ingress.kubernetes.io/ip-address-type: ipv4
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+spec:
+  ingressClassName: alb
+  rules:
+    - host: ajmalkhan.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portfolio-service
+                port:
+                  number: 80
+    - host: www.ajmalkhan.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portfolio-service
+                port:
+                  number: 80
+    - host: backend.ajmalkhan.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: django-app-service
+                port:
+                  number: 80
+    # - host: testing.ajmalkhan.online
+    #   http:
+    #     paths:
+    #       - path: /
+    #         pathType: Prefix
+    #         backend:
+    #           service:
+    #             name: testing-service
+    #             port:
+    #               number: 80
+# spec:
+#   ingressClassName: alb
+#   rules:
+#     - host: www.ajmalkhan.online
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: portfolio-service
+#                 port:
+#                   number: 80
+#           - path: /api
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: django-app-service
+#                 port:
+#                   number: 80
+#     - host: ajmalkhan.online
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: portfolio-service
+#                 port:
+#                   number: 80
+#           - path: /api
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: django-app-service
+#                 port:
+#                   number: 80
+
+# /////////////////////////////////////////////////////////////////////////////////////////////
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: nginx-ingress-ip
+#   annotations:
+#     alb.ingress.kubernetes.io/load-balancer-name: mmmm-alb-ip-mode
+#     kubernetes.io/ingress.class: alb
+#     #ingressClassName: alb
+#     # Specify the ALB settings, like listener protocol (HTTP)
+#     alb.ingress.kubernetes.io/scheme: internet-facing
+#     alb.ingress.kubernetes.io/target-type: ip
+#     # Specify the security group (optional, can be omitted for automatic assignment)
+#     # alb.ingress.kubernetes.io/security-groups: <your-security-group-id>
+#     alb.ingress.kubernetes.io/backend-protocol: HTTP
+#     alb.ingress.kubernetes.io/subnets: subnet-0a74bcbfbb7e8dc8b,subnet-00d9de26b3f0a0544
+#     alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:992382812472:certificate/0a9f7226-8636-4b4e-965e-887f81d7976e"
+#     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-1-2017-01
+#     alb.ingress.kubernetes.io/ip-address-type: ipv4
+#     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+#     alb.ingress.kubernetes.io/ssl-redirect: '443'
+
+# spec:
+#   ingressClassName: alb
+#   - host: www.ajmalkhan.online
+#     http:
+#       paths:
+#         - path: /
+#           pathType: Prefix
+#           backend:
+#             service:
+#               name: portfolio-service
+#               port:
+#                 number: 80
+#         - path: /api
+#           pathType: Prefix
+#           backend:
+#             service:
+#               name: django-app-service
+#               port:
+#                 number: 80
+#   - host: ajmalkhan.online
+#     http:
+#       paths:
+#         - path: /
+#           pathTyp
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+# spec:
+#   ingressClassName: alb
+#   rules:
+#     - host: ajmalkhan.online
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: portfolio-service
+#                 port:
+#                   number: 80
+#     - host: www.ajmalkhan.online
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: portfolio-service
+#                 port:
+#                   number: 80
+#     # - host: testing.ajmalkhan.online
+#     #   http:
+#     #     paths:
+#     #       - path: /
+#     #         pathType: Prefix
+#     #         backend:
+#     #           service:
+#     #             name: testing-service
+#     #             port:
+#     #               number: 80
+#     - host: api.ajmalkhan.online
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: django-app-service
+#                 port:
+#                   number: 80

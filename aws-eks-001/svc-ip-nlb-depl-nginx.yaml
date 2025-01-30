@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-ip-mode
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-subnets: subnet-0a74bcbfbb7e8dc8b,subnet-00d9de26b3f0a0544
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip # Use IP-based targets
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing # Make the NLB publicly accessible
+    service.beta.kubernetes.io/aws-load-balancer-ip-address-type: ipv4
+    service.beta.kubernetes.io/aws-load-balancer-name: "mmmm-nlb-ip-mode"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:992382812472:certificate/0a9f7226-8636-4b4e-965e-887f81d7976e"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443" # Specify the ports to use SSL termination    
+    service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy: "ELBSecurityPolicy-TLS13-1-2-2021-06"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 443
+      targetPort: 80
+      protocol: TCP
+  type: LoadBalancer
+  loadBalancerClass: service.k8s.aws/nlb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80

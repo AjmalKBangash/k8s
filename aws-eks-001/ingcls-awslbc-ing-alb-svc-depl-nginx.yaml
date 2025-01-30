@@ -1,0 +1,92 @@
+# THE SVC HAS BEEN ADDED FOR ING RES IN CLUSTER IP TYPE
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  annotations:
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80    # The port the service will expose inside the cluster
+      targetPort: 80    # The port the container is listening on
+  #nodePort: 30080    # The port on each node to expose the service
+  type: ClusterIP
+---
+# THE DEPL OF NGINX AND OR ANY OTHER HAS BEEN ADDED TO THE FILE 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+---
+# THE ING CLASS FOR ING RESOURCE WITH AWS LBC CONTROLLER HAS BEEN ADDED 
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: alb
+spec:
+  controller: ingress.k8s.aws/alb
+---
+# THE ING RES FOR NGINX SERVICE SNDF DEPL AND FOR AWS LBC ALB PROVISIOING HAS BEEN ADDED
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress-ip
+  annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: mmmm-alb-ip-mode
+    kubernetes.io/ingress.class: alb
+    #ingressClassName: alb
+    # Specify the ALB settings, like listener protocol (HTTP)
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    # Specify the security group (optional, can be omitted for automatic assignment)
+    # alb.ingress.kubernetes.io/security-groups: <your-security-group-id>
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/subnets: subnet-0a74bcbfbb7e8dc8b,subnet-00d9de26b3f0a0544
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:992382812472:certificate/0a9f7226-8636-4b4e-965e-887f81d7976e"
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-1-2017-01
+    alb.ingress.kubernetes.io/ip-address-type: ipv4
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+
+spec:
+  ingressClassName: alb
+  rules:
+    - host: ajmalkhan.online # Replace this with the domain or subdomain pointing to the ALB
+    #- host: www.ajmalkhan.online # Replace this with the domain or subdomain pointing to the ALB
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+    - host: www.ajmalkhan.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+

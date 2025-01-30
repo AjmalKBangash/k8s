@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: fr-depl
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: fr-pods-label
@@ -14,18 +14,21 @@ spec:
     spec:
       containers:
         - name: fr-con
-          # image: ajmalkhanbangash/port-frontend:0.0.6
-          image: port-frontend:0.0.6
+          image: ajmalkhanbangash/portfolio:0.0.0
+          # image: port-frontend:0.0.6
           # image: nginx
           ports:
             - containerPort: 80
-          volumeMounts:
-            - mountPath: "/etc/nginx/nginx.conf"
-              name: fr-conf-pv-volume
-              subPath: nginx.conf
-      volumes:
-        - name: fr-conf-pv-volume
-          configMap:
-            name: fr-conf-cm
+      #     volumeMounts:
+      #       - mountPath: "/etc/nginx/nginx.conf"
+      #         name: fr-conf-pv-volume
+      #         subPath: nginx.conf
+      # volumes:
+      #   - name: fr-conf-pv-volume
+      #     configMap:
+      #       name: fr-conf-cm
           # persistentVolumeClaim:
           #   claimName: ng-conf-pvc
+
+
+

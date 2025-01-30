@@ -1,0 +1,270 @@
+To install the AWS Load Balancer Controller (LBC) in your EKS cluster in the **us-west-2** region with cluster name **mmmm**, without using Helm, follow these simplified steps. This ensures that the controller is correctly configured to launch ALB or NLB resources.
+
+---
+
+### **Prerequisites**
+
+1. Ensure your cluster is running Kubernetes 1.22+.
+2. Verify the following tools are installed on your system:
+   - AWS CLI
+   - kubectl
+   - eksctl
+3. Ensure your EKS cluster has the OIDC provider associated. If not, run the following:
+   ```bash
+   eksctl utils associate-iam-oidc-provider \
+       --region us-west-2 \
+       --cluster mmmm \
+       --approve
+   ```
+
+---
+
+### **Step 1: Create the IAM Policy**
+
+Download the AWS Load Balancer Controller IAM policy:
+```bash
+curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
+```
+
+Create an IAM policy named `AWSLoadBalancerControllerIAMPolicy`:
+```bash
+aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file://iam-policy.json
+```
+
+Note down the returned `ARN` (e.g., `arn:aws:iam::<AWS_ACCOUNT_ID>:policy/AWSLoadBalancerControllerIAMPolicy`).
+
+---
+
+### **Step 2: Create an IAM Role and Service Account**
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+If `eksctl` fails to create the IAM role and service account, you can manually create them using the AWS CLI and `kubectl`. Here's the alternative process:
+
+---
+
+### **Step 2 (Alternative): Manually Create IAM Role and Service Account**
+
+#### **2.1: Create the IAM Role**
+
+1. Create a trust relationship policy document for the OIDC provider. Replace `<CLUSTER_NAME>` with your cluster name and `<OIDC_PROVIDER>` with your cluster's OIDC provider URL. You can find the OIDC URL in the EKS console under **Cluster configuration**.
+
+   Create a file named `trust-policy.json`:
+   ```json
+   {
+       "Version": "2012-10-17",
+       "Statement": [
+           {
+               "Effect": "Allow",
+               "Principal": {
+                   "Federated": "arn:aws:iam::<AWS_ACCOUNT_ID>:oidc-provider/<OIDC_PROVIDER>"
+               },
+               "Action": "sts:AssumeRoleWithWebIdentity",
+               "Condition": {
+                   "StringEquals": {
+                       "<OIDC_PROVIDER>:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
+                   }
+               }
+           }
+       ]
+   }
+   ```
+
+2. Create the IAM role using the AWS CLI:
+   ```bash
+   aws iam create-role \
+       --role-name AWSLoadBalancerControllerIAMRole \
+       --assume-role-policy-document file://trust-policy.json
+   ```
+
+3. Attach the policy to the role:
+   ```bash
+   aws iam attach-role-policy \
+       --role-name AWSLoadBalancerControllerIAMRole \
+       --policy-arn arn:aws:iam::992382812472:policy/AWSLoadBalancerControllerIAMPolicy
+   ```
+
+#### **2.2: Create the Kubernetes Service Account**
+
+1. Create a ServiceAccount manifest file named `sa-lbc.yaml`:
+   ```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: aws-load-balancer-controller
+  name: aws-load-balancer-controller
+  namespace: kube-system
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::992382812472:role/AWSLoadBalancerControllerIAMRole
+   ```
+
+2. Apply the ServiceAccount:
+   ```bash
+   kubectl apply -f sa-wr.yaml
+   ```
+
+---
+
+### **Verification**
+
+After completing these steps, ensure the ServiceAccount is created:
+```bash
+kubectl get serviceaccount aws-load-balancer-controller -n kube-system -o yaml
+```
+
+You should see the `eks.amazonaws.com/role-arn` annotation pointing to the IAM role.
+
+---
+
+### **Proceed with Installation**
+
+Once the IAM role and ServiceAccount are manually set up, you can proceed to install the AWS Load Balancer Controller using the steps outlined earlier.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Create the IAM role and service account for the LBC using the policy ARN:
+```bash
+eksctl create iamserviceaccount \
+    --region us-west-2 \
+    --cluster mmmm \
+    --namespace kube-system \
+    --name aws-load-balancer-controller \
+    --attach-policy-arn arn:aws:iam::<AWS_ACCOUNT_ID>:policy/AWSLoadBalancerControllerIAMPolicy \
+    --approve \
+    --override-existing-serviceaccounts
+```
+
+---
+
+### **Step 3: Install cert-manager**
+
+The AWS LBC requires `cert-manager`. Install it using the following command:
+```bash
+kubectl apply --validate=false -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.3/cert-manager.yaml
+```
+
+Wait until all cert-manager pods are running:
+```bash
+kubectl get pods --namespace cert-manager
+```
+
+---
+
+### **Step 4: Install the AWS Load Balancer Controller**
+
+1. Download the YAML manifest:
+   ```bash
+   wget https://github.com/kubernetes-sigs/aws-load-balancer-controller/releases/download/v2.11.0/v2_11_0_full.yaml
+   ```
+
+2. Open the file and edit the Deployment section to set your cluster name:
+   ```yaml
+   spec:
+     template:
+       spec:
+         containers:
+           - args:
+               - --cluster-name=mmmm
+   ```
+
+3. Delete the `ServiceAccount` section from the file since we already created it using `eksctl`:
+   ```yaml
+   apiVersion: v1
+   kind: ServiceAccount
+   metadata:
+     name: aws-load-balancer-controller
+     namespace: kube-system
+   ```
+
+4. Apply the modified YAML file:
+   ```bash
+   kubectl apply -f v2_11_0_full.yaml
+   ```
+
+---
+
+### **Step 5: Install Default IngressClass (Optional)**
+
+Download and apply the default ingress class and parameters:
+```bash
+wget https://github.com/kubernetes-sigs/aws-load-balancer-controller/releases/download/v2.11.0/v2_11_0_ingclass.yaml
+kubectl apply -f v2_11_0_ingclass.yaml
+```
+
+---
+
+### **Step 6: Verify Installation**
+
+Ensure the AWS Load Balancer Controller pod is running:
+```bash
+kubectl get pods -n kube-system
+```
+
+You should see a pod named `aws-load-balancer-controller` in a `Running` state.
+
+---
+
+### **Step 7: Configure Security Groups for Nodes**
+
+Ensure your worker nodes' security groups allow incoming traffic on TCP port `9443` from the EKS control plane for webhook access.
+
+---
+
+### **Step 8: Launch ALB or NLB**
+
+- **For ALB:** Create an Ingress resource with the annotation `kubernetes.io/ingress.class: alb`.
+- **For NLB:** Use a Service of type `LoadBalancer` with the annotation `service.beta.kubernetes.io/aws-load-balancer-type: nlb`.
+
+---
+
+### **Summary of Key Commands**
+
+1. Associate OIDC Provider:
+   ```bash
+   eksctl utils associate-iam-oidc-provider --region us-west-2 --cluster mmmm --approve
+   ```
+
+2. Create IAM Policy:
+   ```bash
+   aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam-policy.json
+   ```
+
+3. Create IAM Service Account:
+   ```bash
+   eksctl create iamserviceaccount --region us-west-2 --cluster mmmm --namespace kube-system --name aws-load-balancer-controller --attach-policy-arn arn:aws:iam::<AWS_ACCOUNT_ID>:policy/AWSLoadBalancerControllerIAMPolicy --approve --override-existing-serviceaccounts
+   ```
+
+4. Install cert-manager:
+   ```bash
+   kubectl apply --validate=false -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.3/cert-manager.yaml
+   ```
+
+5. Apply the LBC YAML file:
+   ```bash
+   kubectl apply -f v2_11_0_full.yaml
+   ```
+
+6. (Optional) Apply IngressClass:
+   ```bash
+   kubectl apply -f v2_11_0_ingclass.yaml
+   ```
+
+This setup ensures the AWS Load Balancer Controller is properly installed in your EKS cluster to manage ALB and NLB resources.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+---------->>>>> NOW POSTGRESQL STARTED
+sudo apt update
+sudo apt install postgresql-client
+
+psql -h <host> -U <username> -d <dbname>
+
+UPDATE core_customuser
+SET is_active = TRUE WHERE email = 'ak1489007@gmail.com';
+
+SELECT * FROM core_customuser;
+
+
