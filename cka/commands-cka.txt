@@ -1,0 +1,128 @@
+--- k create deploy red --image=nginx --replicas=2 --dry-run='client' -o yaml > depl-red.yaml
+
+--- k get pods -o wide
+NAME                    READY   STATUS    RESTARTS   AGE   IP           NODE           NOMINATED NODE   READINESS GATES
+blue-5659879b55-6xb2m   1/1     Running   0          13m   172.17.1.5   node01         <none>           <none>
+blue-5659879b55-8dscz   1/1     Running   0          12m   172.17.1.6   node01         <none>           <none>
+blue-5659879b55-cqkkt   1/1     Running   0          13m   172.17.1.4   node01         <none>           <none>
+red-7c64d97ff5-jgxn7    1/1     Running   0          16s   172.17.0.6   controlplane   <none>           <none>
+red-7c64d97ff5-nlz74    1/1     Running   0          16s   172.17.0.5   controlplane   <none>           <none>
+
+--- cat depl-red.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: red
+  name: red
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: red
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: red
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: 'Exists'
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
+
+--- cat depl.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: blue
+  name: blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: blue
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: blue
+    spec:
+     affinity:
+      nodeAffinity:
+       requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: color
+            operator: 'In'
+            values:
+            - blue
+     containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+status: {}
+
+--- Example: Pod with stress Command
+Here’s an example of a Kubernetes Pod that uses the stress command to consume CPU and memory:
+
+yaml
+Copy
+apiVersion: v1
+kind: Pod
+metadata:
+  name: stress-pod
+spec:
+  containers:
+  - name: stress-container
+    image: polinux/stress
+    args:
+    - "--cpu"
+    - "2"
+    - "--vm"
+    - "1"
+    - "--vm-bytes"
+    - "128M"
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "256Mi"
+      requests:
+        cpu: "250m"
+        memory: "128Mi"
+Explanation of the stress Command
+The stress command in the example above has the following arguments:
+
+--cpu 2: Spawn 2 workers to stress the CPU.
+
+--vm 1: Spawn 1 worker to stress the memory.
+
+--vm-bytes 128M: Allocate 128 MB of memory per worker.
+
+--- Common stress Command Options
+--- gHere are some common options for the stress command:
+
+Option	Description
+--cpu N	Spawn N workers to stress the CPU.
+--vm N	Spawn N workers to stress the memory.
+--vm-bytes SIZE	Allocate SIZE bytes of memory per worker (e.g., 128M, 1G).
+--io N	Spawn N workers to stress the I/O.
+--hdd N	Spawn N workers to stress the disk by writing and removing files.
+--timeout SEC	Run the stress test for SEC seconds and then exit.
+
+------- k get pods --selector='key=value,key2=value2'
+these both are same up and down
+------- k get pods -l='key=value,key2=value2'
