@@ -126,3 +126,91 @@ Option	Description
 ------- k get pods --selector='key=value,key2=value2'
 these both are same up and down
 ------- k get pods -l='key=value,key2=value2'
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CREATING K8S CLUSTER WITH KUBEADM
+
+STEP 001: ------ swap
+STEP 002: ------ IPTABLES
+STEP 003: ------ LOAD KERNAL MODULES (MODPROB)
+STEP 004: ------ CGROUP
+STEP 005: ------ INSTALL CONTAINERD WITH RUNC (GENERATE CONFIG FILE AND EDIT SYSTEMCGROUP)
+STEP 006: ------ INSTALL KUBEADM (ENABLE AND START KUBELET)
+STEP 007: ------ sudo kubeadm init (INITIALIZE THE K8S LCUSTER WITH PROPER PODS CIDR RANGE ANS MAY BE SPECIFYING SOCKER LOCATION FOR CONTAINERD,,, SPECIFY ALSO THE NODE NAME,,, SPECIFY ALSO THE APISERVER ADVERTISE ADDRESS(PUBLIC IP ADDRESS OF THE MASTER NODE))
+
+
+
+
+
+
+
+
+INSTALLING CONTAINERD FROM THIS LINK OF GITHUB (https://github.com/containerd/containerd/blob/main/docs/getting-started.md)
+
+THESE ARE THE STEPS BUT REMEMBER!
+Getting started with containerd
+Installing containerd
+Option 1: From the official binaries
+The official binary releases of containerd are available for the amd64 (also known as x86_64) and arm64 (also known as aarch64) architectures.
+
+Typically, you will have to install runc and CNI plugins from their official sites too.
+
+Step 1: Installing containerd
+Download the containerd-<VERSION>-<OS>-<ARCH>.tar.gz archive from https://github.com/containerd/containerd/releases , verify its sha256sum, and extract it under /usr/local:
+
+$ tar Cxzvf /usr/local containerd-1.6.2-linux-amd64.tar.gz
+bin/
+bin/containerd-shim-runc-v2
+bin/containerd-shim
+bin/ctr
+bin/containerd-shim-runc-v1
+bin/containerd
+bin/containerd-stress
+The containerd binary is built dynamically for glibc-based Linux distributions such as Ubuntu and Rocky Linux. This binary may not work on musl-based distributions such as Alpine Linux. Users of such distributions may have to install containerd from the source or a third party package.
+
+FAQ: For Kubernetes, do I need to download cri-containerd-(cni-)<VERSION>-<OS-<ARCH>.tar.gz too?
+
+Answer: No.
+
+As the Kubernetes CRI feature has been already included in containerd-<VERSION>-<OS>-<ARCH>.tar.gz, you do not need to download the cri-containerd-.... archives to use CRI.
+
+The cri-containerd-... archives are deprecated, do not work on old Linux distributions, and will be removed in containerd 2.0.
+
+systemd
+If you intend to start containerd via systemd, you should also download the containerd.service unit file from https://raw.githubusercontent.com/containerd/containerd/main/containerd.service into /usr/local/lib/systemd/system/containerd.service, and run the following commands:
+
+systemctl daemon-reload
+systemctl enable --now containerd
+Step 2: Installing runc
+Download the runc.<ARCH> binary from https://github.com/opencontainers/runc/releases , verify its sha256sum, and install it as /usr/local/sbin/runc.
+
+$ install -m 755 runc.amd64 /usr/local/sbin/runc
+The binary is built statically and should work on any Linux distribution.
+
+Step 3: Installing CNI plugins
+Download the cni-plugins-<OS>-<ARCH>-<VERSION>.tgz archive from https://github.com/containernetworking/plugins/releases , verify its sha256sum, and extract it under /opt/cni/bin:
+
+$ mkdir -p /opt/cni/bin
+$ tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
+./
+./macvlan
+./static
+./vlan
+./portmap
+./host-local
+./vrf
+./bridge
+./tuning
+./firewall
+./host-device
+./sbr
+./loopback
+./dhcp
+./ptp
+./ipvlan
+./bandwidth
+The binaries are built statically and should work on any Linux distribution.
+ 
+THE LAST STEP IS ------>>>>>> If you plan to use Cilium (or another full CNI like Calico or Flannel), you do not need to install cni-plugins-linux-amd64-v1.6.2.tgz separately WHICH IS STEP 3.
+
